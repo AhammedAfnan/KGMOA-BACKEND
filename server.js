@@ -1,11 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
-
-// Import modules
 const connectDB = require('./config/db');
-const registerRoutes = require('./routes/userRoutes');
+const userRoutes = require('./routes/userRoutes');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,7 +16,7 @@ app.use(bodyParser.json());
 connectDB();
 
 // Use routes
-app.use('/api', registerRoutes);
+app.use('/api', userRoutes);
 
 // Start server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

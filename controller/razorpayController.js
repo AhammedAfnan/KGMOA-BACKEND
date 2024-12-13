@@ -26,7 +26,7 @@ const createOrder = async (req, res) => {
 };
 
 const verifyPayment = async (req, res) => {
-  const { kmc, paymentId, razorpay_order_id, razorpay_signature } =
+  const { kmc, paymentId, razorpay_order_id, razorpay_signature, amount } =
     req.body;
 
   const body = razorpay_order_id + "|" + paymentId;
@@ -43,6 +43,7 @@ const verifyPayment = async (req, res) => {
         kmc, // Unique identifier for the user
         orderId: razorpay_order_id,
         paymentId: paymentId,
+        amount:amount,
         signature: razorpay_signature,
         status: "Success", // You can also save additional status info
       });

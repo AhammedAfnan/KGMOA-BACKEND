@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   kmc: { type: Number, required: true },
   mobile: { type: Number, required: true },
   regTarrif : { type: String, required: true },
-  coDel : { type: Boolean , default: false},
+  coDel : { type: Boolean , default: false },
 });
 
 module.exports = mongoose.model('user', userSchema);

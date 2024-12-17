@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes')
+const volunteerRoutes = require('./routes/volunteerRoutes')
 require('dotenv').config();
 
 const app = express();
@@ -18,7 +19,8 @@ connectDB();
 
 // Use routes
 app.use('/api', userRoutes);
-app.use('/api', adminRoutes)
+app.use('/api', adminRoutes);
+app.use('/api',volunteerRoutes)
 
 // Start server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

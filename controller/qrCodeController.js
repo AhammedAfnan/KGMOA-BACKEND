@@ -3,7 +3,7 @@ const QRCodeModel = require('../models/qrCodeModel'); // Replace with the correc
 // Controller to save QR code details
 const saveQRCode = async (req, res) => {
   try {
-    const { userName, qrCodeImage } = req.body;
+    const { userId, userName, qrCodeImage } = req.body;
 
     // Validation (optional)
     if (!userName) {

@@ -17,7 +17,7 @@ const registerUser = async (req, res) => {
     const newRegister = new User({ name, place, kmc, mobile, regTarrif, coDel });
     await newRegister.save();
 
-    res.status(201).json({ message: 'Data saved successfully!' });
+    res.status(201).json({ message: 'Data saved successfully!',userId:newRegister._id});
   } catch (err) {
     console.error('Error:', err.message);
     res.status(500).json({ error: 'Internal server error.' });

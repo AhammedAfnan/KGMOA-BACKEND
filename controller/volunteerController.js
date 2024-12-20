@@ -1,4 +1,5 @@
 const Volunteer = require('../models/volunteerModel')
+const MealPlan = require('../models/mealsModel')
 const bcrypt = require("bcrypt")
 
 
@@ -27,4 +28,39 @@ const verifyVolunteerLogin = async(req,res) => {
     }
 }
 
-module.exports = { verifyVolunteerLogin }
+
+const saveMealPlan = async (req,res) => {
+    console.log(req.body);
+    
+    const { userId, formState } = req.body;
+
+    try {
+      await MealPlan.updateOne(
+        { userId },
+        { $set: { formState, isSubmitted: true } },
+        { upsert: true }
+      );
+      res.status(200).send({ success: true, message: "Form submitted successfully!" });
+    } catch (error) {
+      console.error("Error saving meal plan:", error);
+      res.status(500).send({ success: false, error: "Error saving data to database." });
+    }
+}
+
+const getMealPlan = async (req,res) => {
+    const { userId } = req.query;
+
+    try {
+      const mealPlan = await MealPlan.findOne({ userId });
+      res.status(200).send({
+        success: true,
+        formState: mealPlan?.formState || {},
+        isSubmitted: mealPlan?.isSubmitted || false,
+      });
+    } catch (error) {
+      console.error("Error fetching meal plan:", error);
+      res.status(500).send({ success: false, error: "Error fetching data from database." });
+    }
+}
+
+module.exports = { verifyVolunteerLogin,saveMealPlan,getMealPlan }

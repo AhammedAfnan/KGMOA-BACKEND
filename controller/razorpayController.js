@@ -26,6 +26,7 @@ const createOrder = async (req, res) => {
 };
 
 const verifyPayment = async (req, res) => {
+  
   const { kmc, paymentId, razorpay_order_id, razorpay_signature, amount } =
     req.body;
 

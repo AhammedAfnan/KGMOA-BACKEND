@@ -3,6 +3,9 @@ const User = require("../models/userModel")
 const Payment = require('../models/paymentModel')
 const QrCode = require('../models/qrCodeModel')
 const bcrypt = require("bcrypt")
+const News = require('../models/newsModel')
+const MealPlan = require('../models/mealsModel')
+
 
 const verifyLogin = async(req,res) => {
     try {
@@ -58,7 +61,7 @@ const getTableData = async(req,res) => {
                     regTarrif:user.regTarrif,
                     amount: payment ? payment.amount : "N/A",
                     paymentId: payment ? payment.paymentId : "N/A",
-                    qrCode: qrCode ? qrCode.qrCodeImage : "N/A",
+                    qrCode: qrCode ? qrCode.qrCodeUrl  : "N/A",
                 }
             })
         )
@@ -91,5 +94,45 @@ const changePass = async(req,res) => {
     }
 }
 
+const addNews = async (req,res) => {
+    const { title, description } = req.body;
 
-module.exports = {verifyLogin, getUsersCount,getTableData,changePass}
+    try {
+      const news = new News({ title, description });
+      await news.save();
+      res.status(201).json({ message: "News added successfully", news });
+    } catch (error) {
+      console.error("Error saving news:", error);
+      res.status(500).json({ message: "Failed to add news" });
+    }
+}
+
+const getCheckedInCount = async (req, res) => {
+    try {
+      const checkedInCount = await MealPlan.countDocuments({ 
+        "formState.checkIn": true // Filters documents where checkedIn is true
+      });
+  
+      res.status(200).json({ count: checkedInCount });
+    } catch (error) {
+      console.error("Error fetching checked-in count", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+
+  const getReceivedKitCount = async (req, res) => {
+    try {
+      const receivedKitCount = await MealPlan.countDocuments({ 
+        "formState.kitReceived": true // Filters documents where receivedKit is true
+      });
+  
+      res.status(200).json({ count: receivedKitCount });
+    } catch (error) {
+      console.error("Error fetching received kit count", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+  
+  
+
+module.exports = {verifyLogin, getUsersCount,getTableData,changePass,addNews,getCheckedInCount,getReceivedKitCount}

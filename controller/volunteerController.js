@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt")
 
 
 const verifyVolunteerLogin = async(req,res) => {
-    try {
+    try {      
         const { username, password } = req.body;
 
         if(!username || !password ) {
@@ -12,6 +12,7 @@ const verifyVolunteerLogin = async(req,res) => {
         }
         
         const volunteer = await Volunteer.findOne({username})
+        
         if(!volunteer) {
             return res.status(404).json({message:"Volunteer not found"})
         }
@@ -30,7 +31,6 @@ const verifyVolunteerLogin = async(req,res) => {
 
 
 const saveMealPlan = async (req,res) => {
-    console.log(req.body);
     
     const { userId, formState } = req.body;
 

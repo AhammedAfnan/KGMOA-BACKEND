@@ -1,10 +1,27 @@
 const mongoose = require('mongoose');
 
-const QRCodeSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
-  userName: { type: String, required: true },
-  qrCodeImage: {type: String, required:true},
-  createdAt: { type: Date, default: Date.now },
-});
+// Define the QRCode Schema
+const qrCodeSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId, // MongoDB ObjectId for user
+    required: true,
+    ref: 'User' // Assuming there's a User model to reference
+  },
+  userName: {
+    type: String,
+    required: true,
+  },
+  qrCodeUrl: {  // This will store the URL returned by Cloudinary
+    type: String,
+    required: true,
+  },
+  cloudinaryId: {  // This will store the public ID from Cloudinary (used to delete or manage images)
+    type: String,
+    required: true,
+  },
+}, { timestamps: true });  // Adding timestamps for createdAt and updatedAt
 
-module.exports = mongoose.model('QRCode', QRCodeSchema);
+// Create the QRCode model
+const QRCode = mongoose.model('QRCode', qrCodeSchema);
+
+module.exports = QRCode;

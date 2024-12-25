@@ -10,6 +10,8 @@ const razorpayInstance = new Razorpay({
 });
 
 const createOrder = async (req, res) => {
+  console.log('amount at back',req.body.amount);
+  
   const options = {
     amount: req.body.amount,
     currency: "INR",
@@ -29,6 +31,9 @@ const verifyPayment = async (req, res) => {
   
   const { kmc, paymentId, razorpay_order_id, razorpay_signature, amount } =
     req.body;
+
+  console.log('amount at verifyPayment',amount); 
+  
 
   const body = razorpay_order_id + "|" + paymentId;
 

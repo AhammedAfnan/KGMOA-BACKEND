@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const fs = require('fs')
 const User = require('../models/userModel')
 const News = require('../models/newsModel')
 const QRCodeModel = require('../models/qrCodeModel');
@@ -40,52 +41,74 @@ const getNews = async (req,res) => {
 }
 
 const saveQRCode = async (req, res) => {
-  try {    
+  try {
     const { userId, userName } = req.body;
-    const { file } = req;  // 'file' is provided by multer
+    const { file } = req;
 
-    // Validate userId
+    // Log the file's mimetype to check its format
+    console.log('File mimetype:', file?.mimetype);
+
+    if (!file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    if (!file.mimetype.startsWith('image/')) {
+      return res.status(400).json({ message: 'Uploaded file is not an image' });
+    }
+
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ error: 'Invalid userId' });
     }
 
-    // Check for required fields
-    if (!userName || !file) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    if (!userName) {
+      return res.status(400).json({ message: 'Missing userName' });
     }
 
     // Check if QR code already exists for the user
     const existingQRCode = await QRCodeModel.findOne({ userId });
     if (existingQRCode) {
-      return res.status(409).json({ message: 'QR Code already exists' });
+      return res.status(409).json({ message: 'QR Code already exists for this user' });
     }
 
-    // Upload the QR code image to Cloudinary
-    const uploadResponse = await uploadToCloudinary.uploader.upload(file.path, {
-      public_id: `${userId}_qr_code`,  // Use userId as the image name in Cloudinary
-      folder: 'qr_codes',  // Organize in a folder
-      overwrite: true,     // Overwrite if the file exists
-    });
+    // Upload to Cloudinary
+    const uploadResponse = await uploadToCloudinary(file.path, `${userId}_qr_code`);
+    console.log('Upload response:', uploadResponse);
 
-    // Save the Cloudinary URL to the database
+    if (!uploadResponse || !uploadResponse.secure_url || !uploadResponse.public_id) {
+      return res.status(500).json({ message: 'Error uploading file to Cloudinary' });
+    }
+
     const newQRCode = new QRCodeModel({
       userId,
       userName,
-      qrCodeUrl: uploadResponse.secure_url,  // URL of the image on Cloudinary
-      cloudinaryId: uploadResponse.public_id,  // Cloudinary public ID
+      qrCodeUrl: uploadResponse.secure_url,
+      cloudinaryId: uploadResponse.public_id,
     });
 
     await newQRCode.save();
-
-    // Return success response with QR code data
+    fs.unlinkSync(file.path); // Clean up the file
     res.status(201).json({
       message: 'QR Code saved successfully',
-      qrCodeData: newQRCode,
+      qrCodeData: newQRCode.qrCodeUrl,
     });
   } catch (error) {
     console.error('Error saving QR Code:', error);
+    
+    // Handle duplicate key error specifically
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: 'QR Code already exists for this user',
+        error: error.message
+      });
+    }
+
     res.status(500).json({ message: 'Error saving QR Code', error: error.message });
   }
 };
+
+
+
+
+
 
 module.exports = { registerUser,getNews, saveQRCode };

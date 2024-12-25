@@ -5,7 +5,8 @@ const qrCodeSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId, // MongoDB ObjectId for user
     required: true,
-    ref: 'User' // Assuming there's a User model to reference
+    ref: 'User', // Assuming there's a User model to reference
+    unique:true,
   },
   userName: {
     type: String,

@@ -10,8 +10,14 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const corsOptions = {
+    origin: 'https://kgmoa.netlify.app', // Allow only this origin
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
+    credentials: true, // Allow credentials if necessary
+  };
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 // Connect to MongoDB

@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const corsOptions = {
-    origin: 'https://kgmoa.netlify.app', // Allow only this origin
+    origin: 'https://kgmoa.netlify.app/api', // Allow only this origin
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
   };
 

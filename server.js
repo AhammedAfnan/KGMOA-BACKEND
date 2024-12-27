@@ -12,14 +12,13 @@ const PORT = process.env.PORT || 5000;
 
 const corsOptions = {
   origin: 'https://kgmoa.netlify.app', // Allow only this origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed methods
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
   credentials: true, // Allow cookies and other credentials
 };
 
 // Middleware
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 
 app.use(bodyParser.json());
 

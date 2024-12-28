@@ -8,7 +8,7 @@ const { uploadToCloudinary } = require('../utils/uploadToCloudinary')
 
 const registerUser = async (req, res) => {
   try {    
-    const { name, place, kmc, mobile, regTarrif, coDel } = req.body;
+    const { name, place, kmc, mobile, regTarrif, coDel, paymentMode, paymentDate, utrNumberOrCashReceipt  } = req.body;
 
     const existingKmc = await User.findOne({ kmc });
     if (existingKmc) {
@@ -20,7 +20,7 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ error: 'Mobile number already exists' });
     }
 
-    const newRegister = new User({ name, place, kmc, mobile, regTarrif, coDel });
+    const newRegister = new User({ name, place, kmc, mobile, regTarrif, coDel, paymentMode, paymentDate, utrNumberOrCashReceipt });
     await newRegister.save();
 
     res.status(201).json({ message: 'Data saved successfully!',userId:newRegister._id});
@@ -44,9 +44,6 @@ const saveQRCode = async (req, res) => {
   try {
     const { userId, userName } = req.body;
     const { file } = req;
-
-    // Log the file's mimetype to check its format
-    console.log('File mimetype:', file?.mimetype);
 
     if (!file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -72,7 +69,6 @@ const saveQRCode = async (req, res) => {
 
     // Upload to Cloudinary
     const uploadResponse = await uploadToCloudinary(file.path, `${userId}_qr_code`);
-    console.log('Upload response:', uploadResponse);
 
     if (!uploadResponse || !uploadResponse.secure_url || !uploadResponse.public_id) {
       return res.status(500).json({ message: 'Error uploading file to Cloudinary' });

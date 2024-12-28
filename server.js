@@ -10,15 +10,17 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-  origin: 'https://kgmoa.netlify.app', // Allow only this origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
-  credentials: true, // Allow cookies and other credentials
-};
+// const corsOptions = {
+//   origin: 'https://kgmoa.netlify.app', // Allow only this origin
+//   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
+//   allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+//   credentials: true, // Allow cookies and other credentials
+// };
 
 // Middleware
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+
+app.use(cors())
 
 app.use(bodyParser.json());
 

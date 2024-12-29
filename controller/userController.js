@@ -10,6 +10,10 @@ const registerUser = async (req, res) => {
   try {    
     const { name, place, kmc, mobile, regTarrif, coDel, paymentMode, paymentDate, utrNumberOrCashReceipt  } = req.body;
 
+    if (!regTarrif || !regTarrif.type || !regTarrif.amount) {
+      return res.status(400).json({ error: "Invalid registration tariff." });
+    }
+
     const existingKmc = await User.findOne({ kmc });
     if (existingKmc) {
       return res.status(400).json({ error: 'KMC number already exists' });

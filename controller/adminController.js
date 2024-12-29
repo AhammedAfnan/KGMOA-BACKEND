@@ -50,8 +50,33 @@ const getTableData = async (req, res) => {
 
     const tableData = await Promise.all(
       users.map(async (user, index) => {
-        // const payment = await Payment.findOne({kmc:user.kmc});
         const qrCode = await QrCode.findOne({ userName: user.name });
+
+        // Initialize regTarrifAmount as 0
+        let regTarrifAmount = 0;
+
+        // Ensure regTarrif is a string before checking for "-" and parsing
+        if (user.regTarrif && typeof user.regTarrif === "string") {
+          if (user.regTarrif.includes("-")) {
+            const parts = user.regTarrif.split("-");
+            const amountString = parts[1]?.replace(",", "").trim();
+            regTarrifAmount = parseInt(amountString, 10) || 0; // Default to 0 if parsing fails
+          }
+        } else if (user.regTarrif && typeof user.regTarrif !== "string") {
+          // If regTarrif is not a string, attempt to convert it to a string (if it's an array, object, etc.)
+          const regTarrifString = String(user.regTarrif);
+          if (regTarrifString.includes("-")) {
+            const parts = regTarrifString.split("-");
+            const amountString = parts[1]?.replace(",", "").trim();
+            regTarrifAmount = parseInt(amountString, 10) || 0; // Default to 0 if parsing fails
+          }
+        }
+
+        // Check if coDel exists and add 3000 if true
+        const additionalAmount = user.coDel ? 3000 : 0;
+
+        // Calculate the total amount
+        const totalAmount = regTarrifAmount + additionalAmount;
 
         return {
           id: index + 1,
@@ -59,22 +84,24 @@ const getTableData = async (req, res) => {
           place: user.place,
           kmcNo: user.kmc,
           phone: user.mobile,
-          regTarrif: user.regTarrif,    
+          regTarrif: user.regTarrif,
+          amount: totalAmount, // Include the calculated amount
           paymentMode: user.paymentMode || "N/A",
-          paymentDate: user.paymentDate
-            ? new Date(user.paymentDate).toLocaleDateString() // Format the date
-            : "N/A",
+          paymentDate: user.paymentDate || null,
           utrNumberOrCashReceipt: user.utrNumberOrCashReceipt || "N/A",
           qrCode: qrCode ? qrCode.qrCodeUrl : "N/A",
         };
       })
     );
+
     res.status(200).json(tableData);
   } catch (error) {
     console.error("Error fetching table data", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 const changePass = async (req, res) => {
   const { currentPassword, newPassword } = req.body;

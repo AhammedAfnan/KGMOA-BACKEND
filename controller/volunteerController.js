@@ -30,22 +30,29 @@ const verifyVolunteerLogin = async(req,res) => {
 }
 
 
-const saveMealPlan = async (req,res) => {
-    
-    const { userId, formState } = req.body;
+const saveMealPlan = async (req, res) => {
+  const { userId, formState } = req.body;
 
-    try {
-      await MealPlan.updateOne(
-        { userId },
-        { $set: { formState, isSubmitted: true } },
-        { upsert: true }
-      );
-      res.status(200).send({ success: true, message: "Form submitted successfully!" });
-    } catch (error) {
-      console.error("Error saving meal plan:", error);
-      res.status(500).send({ success: false, error: "Error saving data to database." });
+  try {
+    const updateData = { formState, isSubmitted: true };
+
+    if (formState.checkIn) {
+      updateData.checkInTime = new Date(); // Save current time as check-in time
     }
-}
+
+    await MealPlan.updateOne(
+      { userId },
+      { $set: updateData },
+      { upsert: true }
+    );
+
+    res.status(200).send({ success: true, message: "Form submitted successfully!" });
+  } catch (error) {
+    console.error("Error saving meal plan:", error);
+    res.status(500).send({ success: false, error: "Error saving data to database." });
+  }
+};
+
 
 const getMealPlan = async (req,res) => {
     const { userId } = req.query;

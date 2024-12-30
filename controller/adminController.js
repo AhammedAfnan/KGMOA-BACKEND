@@ -53,24 +53,7 @@ const getTableData = async (req, res) => {
         const qrCode = await QrCode.findOne({ userName: user.name });
 
         // Initialize regTarrifAmount as 0
-        let regTarrifAmount = 0;
-
-        // Ensure regTarrif is a string before checking for "-" and parsing
-        if (user.regTarrif && typeof user.regTarrif === "string") {
-          if (user.regTarrif.includes("-")) {
-            const parts = user.regTarrif.split("-");
-            const amountString = parts[1]?.replace(",", "").trim();
-            regTarrifAmount = parseInt(amountString, 10) || 0; // Default to 0 if parsing fails
-          }
-        } else if (user.regTarrif && typeof user.regTarrif !== "string") {
-          // If regTarrif is not a string, attempt to convert it to a string (if it's an array, object, etc.)
-          const regTarrifString = String(user.regTarrif);
-          if (regTarrifString.includes("-")) {
-            const parts = regTarrifString.split("-");
-            const amountString = parts[1]?.replace(",", "").trim();
-            regTarrifAmount = parseInt(amountString, 10) || 0; // Default to 0 if parsing fails
-          }
-        }
+        let regTarrifAmount = user.regTarrif.amount;
 
         // Check if coDel exists and add 3000 if true
         const additionalAmount = user.coDel ? 3000 : 0;
@@ -78,17 +61,26 @@ const getTableData = async (req, res) => {
         // Calculate the total amount
         const totalAmount = regTarrifAmount + additionalAmount;
 
+        const mealPlan = await MealPlan.findOne({ userId: user._id });
+
+        // Fetch attendedAndReceivedKit and checkInTime values
+        const attendedAndReceivedKit =
+          mealPlan?.formState?.kitReceived || false;
+        const checkInTime = user.checkInTime || null;
+
         return {
           id: index + 1,
           name: user.name,
           place: user.place,
           kmcNo: user.kmc,
           phone: user.mobile,
-          regTarrif: user.regTarrif,
+          regTarrif: user.regTarrif.type,
           amount: totalAmount, // Include the calculated amount
           paymentMode: user.paymentMode || "N/A",
           paymentDate: user.paymentDate || null,
           utrNumberOrCashReceipt: user.utrNumberOrCashReceipt || "N/A",
+          attendedAndReceivedKit, // Include attendance information
+          checkInTime, // Include check-in time
           qrCode: qrCode ? qrCode.qrCodeUrl : "N/A",
         };
       })
@@ -100,8 +92,6 @@ const getTableData = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 const changePass = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
@@ -153,16 +143,21 @@ const getCheckedInCount = async (req, res) => {
 
 const getReceivedKitCount = async (req, res) => {
   try {
+    // Count documents where kitReceived is true
     const receivedKitCount = await MealPlan.countDocuments({
-      "formState.kitReceived": true, // Filters documents where receivedKit is true
+      $and: [
+        { "formState": { $exists: true } },
+        { "formState.kitReceived": true },
+      ],
     });
 
     res.status(200).json({ count: receivedKitCount });
   } catch (error) {
-    console.error("Error fetching received kit count", error);
+    console.error("Error fetching received kit count:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 module.exports = {
   verifyLogin,

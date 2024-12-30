@@ -146,7 +146,7 @@ const getReceivedKitCount = async (req, res) => {
     // Count documents where kitReceived is true
     const receivedKitCount = await MealPlan.countDocuments({
       $and: [
-        { "formState": { $exists: true } },
+        { formState: { $exists: true } },
         { "formState.kitReceived": true },
       ],
     });
@@ -158,6 +158,45 @@ const getReceivedKitCount = async (req, res) => {
   }
 };
 
+const getNews = async (req, res) => {
+  try {
+    const newsList = await News.find(); // Fetch all news articles
+    res.status(200).json(newsList);
+  } catch (error) {
+    console.error("Error fetching news:", error);
+    res.status(500).json({ message: "Failed to fetch news" });
+  }
+};
+
+const deleteNews = async (req, res) => {
+  try {
+    await News.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: "News deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete news" });
+  }
+};
+
+const updateNews = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description } = req.body;
+
+    const updatedNews = await News.findByIdAndUpdate(
+      id,
+      { title, description },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedNews) {
+      return res.status(404).json({ message: "News not found" });
+    }
+
+    res.status(200).json(updatedNews);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating news" });
+  }
+};
 
 module.exports = {
   verifyLogin,
@@ -167,4 +206,7 @@ module.exports = {
   addNews,
   getCheckedInCount,
   getReceivedKitCount,
+  getNews,
+  deleteNews,
+  updateNews
 };

@@ -5,6 +5,9 @@ const QrCode = require("../models/qrCodeModel");
 const bcrypt = require("bcrypt");
 const News = require("../models/newsModel");
 const MealPlan = require("../models/mealsModel");
+const fs = require("fs");
+const path = require("path");
+const cloudinary = require("cloudinary").v2;
 
 const verifyLogin = async (req, res) => {
   try {
@@ -119,14 +122,61 @@ const addNews = async (req, res) => {
   const { title, description } = req.body;
 
   try {
-    const news = new News({ title, description });
+    let imageUrl = "";
+
+    // Check if an image file was uploaded
+    if (req.file) {
+      // Get the absolute path to the uploaded file
+      const filePath = path.resolve(req.file.path);
+
+      // Upload the image to Cloudinary
+      const result = await cloudinary.uploader.upload(filePath, {
+        folder: "news_images", // Optional: Specify a folder in Cloudinary
+        use_filename: true,   // Optional: Use the original file name
+        unique_filename: false, // Optional: Avoid generating unique names
+      });
+
+      // Retrieve the secure URL of the uploaded image
+      imageUrl = result.secure_url;
+
+      // Clean up the local file after successful upload
+      fs.unlinkSync(filePath);
+    }
+
+    // Create a new news item
+    const news = new News({
+      title,
+      description,
+      image: imageUrl, // Save the Cloudinary image URL in the database
+    });
+
+    // Save the news item to the database
     await news.save();
-    res.status(201).json({ message: "News added successfully", news });
+
+    // Respond with a success message and the saved news item
+    res.status(201).json({
+      message: "News added successfully",
+      news,
+    });
   } catch (error) {
-    console.error("Error saving news:", error);
-    res.status(500).json({ message: "Failed to add news" });
+    console.error("Error adding news:", error);
+
+    // Handle specific error types if needed
+    if (req.file) {
+      // Clean up the local file in case of any error during processing
+      fs.unlink(req.file.path, (unlinkError) => {
+        if (unlinkError) console.error("Error cleaning up file:", unlinkError);
+      });
+    }
+
+    // Respond with an error message
+    res.status(500).json({
+      message: "Failed to add news",
+      error: error.message,
+    });
   }
 };
+
 
 const getCheckedInCount = async (req, res) => {
   try {
@@ -181,12 +231,20 @@ const updateNews = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description } = req.body;
+    let imageUrl;
 
-    const updatedNews = await News.findByIdAndUpdate(
-      id,
-      { title, description },
-      { new: true } // Return the updated document
-    );
+    if (req.file) {
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "news_images", // Optional folder in Cloudinary
+      });
+      imageUrl = result.secure_url; // Get the public URL of the uploaded image
+    }
+
+    const updateData = { title, description };
+    if (imageUrl) updateData.image = imageUrl;
+
+    const updatedNews = await News.findByIdAndUpdate(id, updateData, { new: true });
 
     if (!updatedNews) {
       return res.status(404).json({ message: "News not found" });
@@ -194,9 +252,11 @@ const updateNews = async (req, res) => {
 
     res.status(200).json(updatedNews);
   } catch (error) {
+    console.error("Error updating news:", error);
     res.status(500).json({ message: "Error updating news" });
   }
 };
+
 
 module.exports = {
   verifyLogin,

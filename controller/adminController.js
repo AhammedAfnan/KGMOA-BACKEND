@@ -119,28 +119,30 @@ const changePass = async (req, res) => {
 };
 
 const addNews = async (req, res) => {
+  
   const { title, description } = req.body;
 
   try {
     let imageUrl = "";
 
-    // Check if an image file was uploaded
     if (req.file) {
+
       // Get the absolute path to the uploaded file
       const filePath = path.resolve(req.file.path);
 
       // Upload the image to Cloudinary
       const result = await cloudinary.uploader.upload(filePath, {
-        folder: "news_images", // Optional: Specify a folder in Cloudinary
-        use_filename: true,   // Optional: Use the original file name
-        unique_filename: false, // Optional: Avoid generating unique names
+        folder: "news_images",
+        use_filename: true,
+        unique_filename: false,
       });
 
-      // Retrieve the secure URL of the uploaded image
-      imageUrl = result.secure_url;
+      imageUrl = result.secure_url; // Set imageUrl to the uploaded image URL
 
       // Clean up the local file after successful upload
       fs.unlinkSync(filePath);
+    } else {
+      console.warn("No file uploaded"); // Warn if no file is found
     }
 
     // Create a new news item
@@ -153,7 +155,6 @@ const addNews = async (req, res) => {
     // Save the news item to the database
     await news.save();
 
-    // Respond with a success message and the saved news item
     res.status(201).json({
       message: "News added successfully",
       news,
@@ -161,22 +162,19 @@ const addNews = async (req, res) => {
   } catch (error) {
     console.error("Error adding news:", error);
 
-    // Handle specific error types if needed
+    // Clean up local file if present and an error occurred
     if (req.file) {
-      // Clean up the local file in case of any error during processing
       fs.unlink(req.file.path, (unlinkError) => {
         if (unlinkError) console.error("Error cleaning up file:", unlinkError);
       });
     }
 
-    // Respond with an error message
     res.status(500).json({
       message: "Failed to add news",
       error: error.message,
     });
   }
 };
-
 
 const getCheckedInCount = async (req, res) => {
   try {
@@ -244,7 +242,9 @@ const updateNews = async (req, res) => {
     const updateData = { title, description };
     if (imageUrl) updateData.image = imageUrl;
 
-    const updatedNews = await News.findByIdAndUpdate(id, updateData, { new: true });
+    const updatedNews = await News.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     if (!updatedNews) {
       return res.status(404).json({ message: "News not found" });
@@ -257,7 +257,6 @@ const updateNews = async (req, res) => {
   }
 };
 
-
 module.exports = {
   verifyLogin,
   getUsersCount,
@@ -268,5 +267,5 @@ module.exports = {
   getReceivedKitCount,
   getNews,
   deleteNews,
-  updateNews
+  updateNews,
 };
